@@ -1,0 +1,31 @@
+.css-17v8wxy {
+    float: right;
+    margin-top: 100px;
+}
+
+.popularTweetData {
+    float: right;
+    margin-left: 70%;
+    margin-top: 70px;
+}
+
+.table {
+    color: blue;
+    width: 400px !important;
+}
+
+.recharts-wrapper {
+    margin-top: 50px;
+    position: fixed !important;
+}
+
+.recharts-surface {
+    width: 700 !important;
+    height: 400 !important;
+}
+
+.sentiment {
+    position: fixed;
+    top: 70%;
+    right: 60%;
+}
