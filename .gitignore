@@ -1,3 +1,18 @@
+#Project files and folders
+services_layer/data.csv
+services_layer/data.json
+services_layer/package-lock.json
+services_layer/react_ui/package-lock.json
+ml_layer/data_processing_layer/res/
+ml_layer/output/res/
+ml_layer/predict_price/res/
+ml_layer/res/
+ml_layer/sentiment/__pycache__/
+ml_layer/sentiment/server/.DS_Store
+ml_layer/twitter/TwitterApi/__pycache__/
+ml_layer/twitter/TwitterApi/TwitterApi/__pycache__/
+
+
 # Build and Release Folders
 bin-debug/
 bin-release/
@@ -6,6 +21,7 @@ bin-release/
 
 # Other files and folders
 .settings/
+
 
 # Executables
 *.swf
