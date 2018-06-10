@@ -23,5 +23,6 @@ urlpatterns = [
     url(r'^popularTweets/', api.getPopularTweets),
     url(r'^popularInfluencers/', api.getInfluencers),
     url(r'^getPrice/', api.getPrice),
-    url(r'^getOutputPrice/', api.getOutputPrice)
+    url(r'^getOutputPrice/', api.getOutputPrice),
+    url(r'^getOverallSentiments/', api.getOverallSentiments)
 ]

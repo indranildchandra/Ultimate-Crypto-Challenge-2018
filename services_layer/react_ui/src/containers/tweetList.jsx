@@ -17,7 +17,7 @@ class TweetList extends Component {
 
   componentDidMount() {
 		this.interval = setInterval(() => {this.setState({ time: Date.now() }),
-    this.props.loadPopularTweets(), this.props.loadTopInfluencers()}, 30000);
+    this.props.loadPopularTweets(), this.props.loadTopInfluencers()}, 3600000);
 	}
 
 	componentWillUnmount() {
@@ -66,7 +66,7 @@ class TweetList extends Component {
             {i+1}
             </td>
           <td>
-          <a href = {link}>{topInfluencers[i].name} - {topInfluencers[i].twitter_handle}</a>
+          <a href = {link}>{topInfluencers[i].name} - @{topInfluencers[i].twitter_handle}</a>
           </td>
           </tr>)
       }

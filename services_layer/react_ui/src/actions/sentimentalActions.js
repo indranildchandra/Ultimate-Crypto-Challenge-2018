@@ -6,3 +6,10 @@ export const getPrice = () => {
         payload: axios.get(`http://localhost:3000/price`)
     }
 }
+
+export const getSentiments = () => {
+    return {
+        type: 'GET_SENTIMENTS',
+        payload: axios.get(`http://localhost:3000/sentiments`)
+    }
+}

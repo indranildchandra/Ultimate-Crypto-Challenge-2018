@@ -58,6 +58,20 @@ class Api():
 			count += 1
 		return JsonResponse(popularTweetData,safe=False)
 
+	def convertToTimestamp(self,isoFormat):
+		currentTime = dp.parse(isoFormat)
+		#return int(currentTime.strftime('%s'))
+		return int(time.mktime(currentTime.timetuple()))
+
+	def convertTimeToMidnight(self,timestamp):
+		d = datetime.datetime.fromtimestamp(timestamp)
+		diff = d.hour*3600 + d.minute*60 + d.second
+		return timestamp-diff
+
+	def formatTimestamp(self,timestamp):
+		d = datetime.datetime.fromtimestamp(timestamp).strftime('%Y/%m/%d %H:%M:%S')
+		return d
+
 	@csrf_exempt
 	def getPrice(self, request):
 		# product = 'BTC-USD'
@@ -88,29 +102,31 @@ class Api():
 		TRAIN_TEST_SPLIT = 0.8
 		train_index = math.floor(TRAIN_TEST_SPLIT*len(data))
 		# scaler = fitScaler(data[:train_index+WINDOW_SIZE,1:])
-		data_test = data[train_index+WINDOW_SIZE+1:,1:]
+		data_test = data[train_index+WINDOW_SIZE+1:,:]
 		data_obj_arr_actual = []
 		for el in data_test:
 			data_obj_arr_actual.append({
-				'timestamp': el[0],
-				'low': el[1],
-				'high': el[2],
-				'open': el[3],
-				'close': el[4],
-				'volume': el[5]
+				'timestamp': self.formatTimestamp(self.convertToTimestamp(el[0])),
+				'actual_low': el[1],
+				'actual_high': el[2],
+				'actual_open': el[3],
+				'actual_close': el[4],
+				'actual_volume': el[5]
 				})
 
 		df = pd.read_csv('../../output/data/BTC_price_prediction_may.csv',delimiter=',' )
 		# data = np.loadtxt(,)
 		data = df.as_matrix()
+		# print(data_test.shape)
+		# print(data.shape)
 		data_obj_arr_predicted = []
 		for index,el in enumerate(data_test):
-
-			data_obj_arr_actual[index]['itimestamp'] = el[0]
-			data_obj_arr_actual[index]['ilow'] = el[1]
-			data_obj_arr_actual[index]['ihigh'] = el[2]
-			data_obj_arr_actual[index]['iopen'] = el[3]
-			data_obj_arr_actual[index]['iclose'] = el[4]
+			if index>=data.shape[0]:
+				break
+			data_obj_arr_actual[index]['predicted_low'] = data[index][0]
+			data_obj_arr_actual[index]['predicted_high'] = data[index][1]
+			data_obj_arr_actual[index]['predicted_open'] = data[index][2]
+			data_obj_arr_actual[index]['predicted_close'] = data[index][3]
 
 		return JsonResponse(data_obj_arr_actual,safe=False)
 
@@ -135,19 +151,23 @@ class Api():
 		return JsonResponse(data_obj_arr,safe=False)
 
 	def getTwitterData(self):
-		res = requests.get(self.twitter_api_url)
+		try:
+			res = requests.get(self.twitter_api_url)
 
-		print(res.content)
+			print(res.content)
 
-		gip_data = []
+			gip_data = []
 
-		content = None
+			content = None
 
-		if res.status_code != 200:
+			if res.status_code != 200:
+				with open('../twitter_Sample.json', 'r') as f:
+					content = json.load(f)
+			elif res.status_code == 200:
+				content = json.loads(res.content.decode())
+		except requests.exceptions.ConnectionError:
 			with open('../twitter_Sample.json', 'r') as f:
 				content = json.load(f)
-		elif res.status_code == 200:
-			content = json.loads(res.content.decode())
 
 		for popular_tweet in content:
 			rank = popular_tweet['rank']
@@ -201,3 +221,26 @@ class Api():
 
 		# print(len(data))
 		return data
+
+	def getOverallSentiments(self, request):
+		tweetData = self.getTwitterData()
+
+		num_positives = 0
+		num_negatives = 0
+
+		for tweet in tweetData:
+			score = requests.post('http://localhost:8000/message/',json={'message': tweet['popular_tweet_content']})
+			score = float(score.content)
+			if score>0:
+				num_positives += 1
+			elif score<0:
+				num_negatives += 1
+
+		general_sentiment = 'Positive' if num_negatives<=num_positives else 'Negative'
+		score = max(num_positives,num_negatives)/(num_negatives+num_positives)*100
+		score = str(score) + '%'
+		return JsonResponse({
+				'general_sentiment': general_sentiment,
+				'score': score
+			})
+

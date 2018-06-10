@@ -1,29 +1,34 @@
 import React, { Component } from 'react';
 import {connect} from 'react-redux'
 import {LineChart, Label, Line, XAxis, YAxis, CartesianGrid, Tooltip, Legend}  from 'recharts';
-import {getPrice} from '../actions/sentimentalActions.js';
+import {getPrice, getSentiments} from '../actions/sentimentalActions.js';
 import {Tabs, Tab} from 'react-bootstrap';
 import {SyncLoader} from 'react-spinners';
 import Icon from 'react-icons-kit';
 import {caretUp} from 'react-icons-kit/fa/caretUp';
 import {caretDown} from 'react-icons-kit/fa/caretDown';
 import {square} from 'react-icons-kit/fa/square'
+import _ from 'lodash';
 const cryptoAttributes = ['low' , 'high', 'open' , 'close'];
+
+let sentimentIcon = null;
 
 class SentimentDetails extends Component {
 	constructor(props){
 		super(props);
 		this.state= {
 			time: Date.now(),
-			cryptoFeature: 'Low',
+			cryptoFeature: 'low',
 			cryptoKey: 1
 		}
 		this.handleSelect = this.handleSelect.bind(this);
 	}
 
 	componentDidMount() {
+		this.props.getPrice();
+		this.props.getSentiments();
 		this.interval = setInterval(() => {this.setState({ time: Date.now() }),
-		this.props.getPrice()}, 10000);
+		 this.props.getSentiments()}, 60000);
 	}
 
 	componentWillUnmount() {
@@ -36,20 +41,36 @@ class SentimentDetails extends Component {
 
 	render() {
 		let priceTrend = [], priceTrendComponent = null;
-
-		// if(true){
-		// 	sentimentIcon = (
-		// 		<div  style={{ color: '#009933', float: 'right'}}> 
-		// 		<Icon size = {64} icon ={caretUp}/>
-		// 	</div>
-		// 	)
-		// }
+		let data = _.isEmpty(this.props.sentimentsData)  ? {} :  JSON.parse(this.props.sentimentsData);
+		console.log(this.props.sentimentsData, data.general_sentiment);
+		if(data.general_sentiment == "Positive"){
+			sentimentIcon = (
+				<div>
+				<h3 style = {{'padding-left': '85%'}}> Sentiment Score: </h3>
+				<div  style={{ color: '#009933', float: 'right', paddingRight: '30px'}}> 
+				<Icon size = {64} icon ={caretUp}/>
+				{data.score}
+			</div>
+			</div>
+			)
+		}else if (data.general_sentiment == "Negative"){
+			sentimentIcon = (
+				<div>
+					<h4 style = {{'padding-left': '85%'}}>Sentiment Score: </h4>
+				<div  style={{ color: '#e60000', float: 'right', paddingRight: '30px'}}> 
+				<Icon size = {64} icon ={caretDown}/>
+				{data.score}
+			</div>
+			</div>
+			)
+		}
 
 		if(this.props.priceData.length){
-		let dataType = "i" + this.state.cryptoFeature;
+		let actualDataType = "actual_" + this.state.cryptoFeature,
+		predictedDataType = "predicted_" + this.state.cryptoFeature;
 		priceTrend = JSON.parse(this.props.priceData);
 			priceTrendComponent = (
-				<LineChart width={600} height={300} data={priceTrend} margin={{top: 5, right: 30, left: 20, bottom: 5}}>
+				<LineChart width={700} height={500} data={priceTrend} margin={{top: 5, right: 30, left: 20, bottom: 5}}>
        			<XAxis dataKey="timestamp">
 				   <Label value="Time" offset={0} position="insideBottom" />
 				   </XAxis>
@@ -59,8 +80,8 @@ class SentimentDetails extends Component {
        			<CartesianGrid strokeDasharray="3 3"/>
        			<Tooltip/>
        			
-				<Line type="monotone" dataKey={dataType} stroke="#191966" />
-				<Line type="monotone" dataKey={this.state.cryptoFeature} stroke="#008000" />
+				<Line type="monotone" dataKey={actualDataType} stroke="#191966" />
+				<Line type="monotone" dataKey={predictedDataType} stroke="#008000" />
 				<Legend/>
       		</LineChart>
 			)
@@ -69,8 +90,8 @@ class SentimentDetails extends Component {
 			priceTrendComponent = <SyncLoader/>
 		}
 		return (<div>
-			<h2> Bitcoin Price Trend </h2>
-			{/* {sentimentIcon} */}
+			<h2> Bitcoin Trends Portal </h2>
+			{sentimentIcon}
 				<Tabs defaultActiveKey={1} activeKey={this.state.cryptoKey} onSelect = {this.handleSelect} id="uncontrolled-tab-example">
   					<Tab eventKey={1} title="Low">
   					</Tab>
@@ -88,7 +109,8 @@ class SentimentDetails extends Component {
 
 const mapStateToProps = ({sentimentDetails}) => {
   return {
-    priceData : sentimentDetails.priceData
+	priceData : sentimentDetails.priceData,
+	sentimentsData: sentimentDetails.sentimentsData
   };
 }
 
@@ -96,7 +118,10 @@ const mapDispatchToProps = (dispatch) => {
   return {
       getPrice: () => {
           dispatch(getPrice());
-      }
+	  },
+	  getSentiments : () => {
+		  dispatch(getSentiments());
+	  }
   }
 };
 
