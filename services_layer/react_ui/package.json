@@ -36,7 +36,7 @@
     "react-redux": "4.3.0",
     "react-router": "^2.0.1",
     "react-spinners": "^0.3.2",
-    "recharts": "^1.0.0-beta.10",
+    "recharts": "^2.1.14",
     "redux": "^3.0.4",
     "redux-promise-middleware": "^5.1.1"
   }
